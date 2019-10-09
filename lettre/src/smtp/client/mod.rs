@@ -163,10 +163,10 @@ impl<S: Connector + Write + Read + Timeout + Debug> InnerClient<S> {
         Ok(())
     }
 
-    /// Checks if the server is connected using the NOOP SMTP command
+    /// Checks if the underlying server socket is connected
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::wrong_self_convention))]
     pub fn is_connected(&mut self) -> bool {
-        self.stream.is_some() && self.command(NoopCommand).is_ok()
+        self.stream.is_some()
     }
 
     /// Sends an AUTH command with the given mechanism, and handles challenge if needed
