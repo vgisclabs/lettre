@@ -92,7 +92,7 @@ pub struct SmtpClient {
     /// Enable UTF8 mailboxes in envelope or headers
     smtp_utf8: bool,
     /// Optional enforced authentication mechanism
-    authentication_mechanism: Option<Mechanism>,
+    authentication_mechanism: Option<Vec<Mechanism>>,
     /// Force use of the set authentication mechanism even if server does not report to support it
     force_set_auth: bool,
     /// Define network timeout
@@ -177,7 +177,7 @@ impl SmtpClient {
     }
 
     /// Set the authentication mechanism to use
-    pub fn authentication_mechanism(mut self, mechanism: Mechanism) -> SmtpClient {
+    pub fn authentication_mechanism(mut self, mechanism: Vec<Mechanism>) -> SmtpClient {
         self.authentication_mechanism = Some(mechanism);
         self
     }
@@ -320,12 +320,12 @@ impl<'a> SmtpTransport {
             if !self.client_info.force_set_auth {
                 // Compute accepted mechanism
                 let accepted_mechanisms = match self.client_info.authentication_mechanism {
-                    Some(mechanism) => vec![mechanism],
+                    Some(ref mechanism) => mechanism,
                     None => {
                         if self.client.is_encrypted() {
-                            DEFAULT_ENCRYPTED_MECHANISMS.to_vec()
+                            DEFAULT_ENCRYPTED_MECHANISMS
                         } else {
-                            DEFAULT_UNENCRYPTED_MECHANISMS.to_vec()
+                            DEFAULT_UNENCRYPTED_MECHANISMS
                         }
                     }
                 };
@@ -335,27 +335,30 @@ impl<'a> SmtpTransport {
                         .server_info
                         .as_ref()
                         .unwrap()
-                        .supports_auth_mechanism(mechanism)
+                        .supports_auth_mechanism(*mechanism)
                     {
                         found = true;
                         try_smtp!(
                             self.client
-                                .auth(mechanism, self.client_info.credentials.as_ref().unwrap(),),
+                                .auth(*mechanism, self.client_info.credentials.as_ref().unwrap(),),
                             self
                         );
                         break;
                     }
                 }
             } else {
-                try_smtp!(
-                    self.client.auth(
-                        self.client_info.authentication_mechanism.expect(
-                            "force_set_auth set to true, but no authentication mechanism set"
-                        ),
-                        self.client_info.credentials.as_ref().unwrap(),
-                    ),
-                    self
-                );
+                let mechanisms = self
+                    .client_info
+                    .authentication_mechanism
+                    .as_ref()
+                    .expect("force_set_auth set to true, but no authentication mechanism set");
+                for mechanism in mechanisms {
+                    try_smtp!(
+                        self.client
+                            .auth(*mechanism, self.client_info.credentials.as_ref().unwrap(),),
+                        self
+                    );
+                }
                 found = true;
             }
 
