@@ -258,7 +258,7 @@ impl<'a> SmtpTransport {
         }
     }
 
-    fn connect(&mut self) -> Result<(), Error> {
+    pub fn connect(&mut self) -> Result<(), Error> {
         // Check if the connection is still available
         if (self.state.connection_reuse_count > 0) && (!self.client.is_connected()) {
             self.close();
