@@ -100,7 +100,7 @@ impl<S: Write + Read> InnerClient<S> {
     }
 }
 
-impl<S: Connector + Write + Read + Timeout + Debug> InnerClient<S> {
+impl<S: Connector + Write + Read + Timeout> InnerClient<S> {
     /// Closes the SMTP transaction if possible
     pub fn close(&mut self) {
         let _ = self.command(QuitCommand);

@@ -3,7 +3,6 @@
 use self::Error::*;
 use crate::smtp::response::{Response, Severity};
 use base64::DecodeError;
-use native_tls;
 use nom;
 use std::error::Error as StdError;
 use std::fmt;
@@ -35,7 +34,7 @@ pub enum Error {
     /// IO error
     Io(io::Error),
     /// TLS error
-    Tls(native_tls::Error),
+    Tls, //(rustls::error::Error),
     /// Parsing error
     Parsing(nom::error::ErrorKind),
 }
@@ -66,7 +65,7 @@ impl StdError for Error {
             Resolution => "could not resolve hostname",
             Client(err) => err,
             Io(ref err) => err.description(),
-            Tls(ref err) => err.description(),
+            Tls => "tls error", //(ref err) => err.description(),
             Parsing(ref err) => err.description(),
         }
     }
@@ -76,7 +75,7 @@ impl StdError for Error {
             ChallengeParsing(ref err) => Some(&*err),
             Utf8Parsing(ref err) => Some(&*err),
             Io(ref err) => Some(&*err),
-            Tls(ref err) => Some(&*err),
+            Tls => None, //(ref err) => Some(&*err),
             _ => None,
         }
     }
@@ -88,11 +87,11 @@ impl From<io::Error> for Error {
     }
 }
 
-impl From<native_tls::Error> for Error {
-    fn from(err: native_tls::Error) -> Error {
-        Tls(err)
-    }
-}
+// impl From<rustls::Error> for Error {
+//     fn from(err: rustls::Error) -> Error {
+//         Tls(err)
+//     }
+// }
 
 impl From<nom::Err<(&str, nom::error::ErrorKind)>> for Error {
     fn from(err: nom::Err<(&str, nom::error::ErrorKind)>) -> Error {

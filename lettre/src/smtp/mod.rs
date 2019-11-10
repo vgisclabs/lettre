@@ -17,14 +17,12 @@ use crate::smtp::authentication::{
     Credentials, Mechanism, DEFAULT_ENCRYPTED_MECHANISMS, DEFAULT_UNENCRYPTED_MECHANISMS,
 };
 use crate::smtp::client::net::ClientTlsParameters;
-use crate::smtp::client::net::DEFAULT_TLS_MIN_PROTOCOL;
 use crate::smtp::client::InnerClient;
 use crate::smtp::commands::*;
 use crate::smtp::error::{Error, SmtpResult};
 use crate::smtp::extension::{ClientId, Extension, MailBodyParameter, MailParameter, ServerInfo};
 use crate::{SendableEmail, Transport};
 use log::{debug, info};
-use native_tls::TlsConnector;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::time::Duration;
 
@@ -50,8 +48,7 @@ pub const SUBMISSION_PORT: u16 = 587;
 pub const SUBMISSIONS_PORT: u16 = 465;
 
 /// How to apply TLS to a client connection
-#[derive(Clone)]
-#[allow(missing_debug_implementations)]
+#[derive(Debug, Clone)]
 pub enum ClientSecurity {
     /// Insecure connection only (for testing purposes)
     None,
@@ -79,8 +76,8 @@ pub enum ConnectionReuseParameters {
 }
 
 /// Contains client configuration
+#[derive(Debug, Clone)]
 #[allow(missing_debug_implementations)]
-#[derive(Clone)]
 pub struct SmtpClient {
     /// Enable connection reuse
     connection_reuse: ConnectionReuseParameters,
@@ -138,11 +135,12 @@ impl SmtpClient {
     /// Creates an encrypted transport over submissions port, using the provided domain
     /// to validate TLS certificates.
     pub fn new_simple(domain: &str) -> Result<SmtpClient, Error> {
-        let mut tls_builder = TlsConnector::builder();
-        tls_builder.min_protocol_version(Some(DEFAULT_TLS_MIN_PROTOCOL));
+        let mut config = rustls::ClientConfig::new();
+        config
+            .root_store
+            .add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
 
-        let tls_parameters =
-            ClientTlsParameters::new(domain.to_string(), tls_builder.build().unwrap());
+        let tls_parameters = ClientTlsParameters::new(domain.to_string(), config);
 
         SmtpClient::new(
             (domain, SUBMISSIONS_PORT),

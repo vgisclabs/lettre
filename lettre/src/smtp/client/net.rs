@@ -1,7 +1,9 @@
 //! A trait to represent a stream
 
 use crate::smtp::client::mock::MockStream;
-use native_tls::{Protocol, TlsConnector, TlsStream};
+use rustls::{ClientConfig, ProtocolVersion};
+use rustls_connector::{RustlsConnector, TlsStream};
+use std::fmt;
 use std::io::{self, ErrorKind, Read, Write};
 use std::net::{Ipv4Addr, Shutdown, SocketAddr, SocketAddrV4, TcpStream};
 use std::time::Duration;
@@ -11,23 +13,31 @@ use std::time::Duration;
 #[allow(missing_debug_implementations)]
 pub struct ClientTlsParameters {
     /// A connector from `native-tls`
-    pub connector: TlsConnector,
+    pub connector: ClientConfig,
     /// The domain to send during the TLS handshake
     pub domain: String,
 }
 
+impl fmt::Debug for ClientTlsParameters {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("ClientTlsParameters")
+            .field("connector", &"ClientConfig")
+            .field("domain", &self.domain)
+            .finish()
+    }
+}
+
 impl ClientTlsParameters {
     /// Creates a `ClientTlsParameters`
-    pub fn new(domain: String, connector: TlsConnector) -> ClientTlsParameters {
+    pub fn new(domain: String, connector: ClientConfig) -> ClientTlsParameters {
         ClientTlsParameters { connector, domain }
     }
 }
 
 /// Accepted protocols by default.
 /// This removes TLS 1.0 and 1.1 compared to tls-native defaults.
-pub const DEFAULT_TLS_MIN_PROTOCOL: Protocol = Protocol::Tlsv12;
+pub const DEFAULT_TLS_MIN_PROTOCOL: ProtocolVersion = ProtocolVersion::TLSv1_2;
 
-#[derive(Debug)]
 /// Represents the different types of underlying network streams
 pub enum NetworkStream {
     /// Plain TCP stream
@@ -115,11 +125,13 @@ impl Connector for NetworkStream {
         };
 
         match tls_parameters {
-            Some(context) => context
-                .connector
-                .connect(context.domain.as_ref(), tcp_stream)
-                .map(NetworkStream::Tls)
-                .map_err(|e| io::Error::new(ErrorKind::Other, e)),
+            Some(context) => {
+                let connector: RustlsConnector = context.connector.clone().into();
+                connector
+                    .connect(context.domain.as_ref(), tcp_stream)
+                    .map(NetworkStream::Tls)
+                    .map_err(|e| io::Error::new(ErrorKind::Other, e))
+            }
             None => Ok(NetworkStream::Tcp(tcp_stream)),
         }
     }
@@ -127,13 +139,14 @@ impl Connector for NetworkStream {
     #[cfg_attr(feature = "cargo-clippy", allow(clippy::match_same_arms))]
     fn upgrade_tls(&mut self, tls_parameters: &ClientTlsParameters) -> io::Result<()> {
         *self = match *self {
-            NetworkStream::Tcp(ref mut stream) => match tls_parameters
-                .connector
-                .connect(tls_parameters.domain.as_ref(), stream.try_clone().unwrap())
-            {
-                Ok(tls_stream) => NetworkStream::Tls(tls_stream),
-                Err(err) => return Err(io::Error::new(ErrorKind::Other, err)),
-            },
+            NetworkStream::Tcp(ref mut stream) => {
+                let connector: RustlsConnector = tls_parameters.connector.clone().into();
+                match connector.connect(tls_parameters.domain.as_ref(), stream.try_clone().unwrap())
+                {
+                    Ok(tls_stream) => NetworkStream::Tls(tls_stream),
+                    Err(err) => return Err(io::Error::new(ErrorKind::Other, err)),
+                }
+            }
             NetworkStream::Tls(_) => return Ok(()),
             NetworkStream::Mock(_) => return Ok(()),
         };
