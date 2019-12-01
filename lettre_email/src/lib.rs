@@ -123,6 +123,8 @@ impl PartBuilder {
     /// Adds replaces an existing header, or inserts it
     pub fn replace_header<A: Into<Header>>(mut self, header: A) -> PartBuilder {
         self.message.headers.replace(header.into());
+        println!("{:?}", self.message.headers);
+
         self
     }
 
@@ -184,6 +186,17 @@ impl EmailBuilder {
     /// Add a generic header
     pub fn header<A: Into<Header>>(mut self, header: A) -> EmailBuilder {
         self.message = self.message.header(header);
+        self
+    }
+
+    /// Get the current header values.
+    pub fn get_header(&self, header: String) -> Option<&Header> {
+        self.message.get_header(header)
+    }
+
+    /// Adds replaces an existing header, or inserts it
+    pub fn replace_header<A: Into<Header>>(mut self, header: A) -> EmailBuilder {
+        self.message = self.message.replace_header(header.into());
         self
     }
 
@@ -600,6 +613,37 @@ mod test {
                  <reply@localhost>\r\nIn-Reply-To: original\r\nMIME-Version: 1.0\r\n\r\nHello \
                  World!\r\n",
                 date_now.rfc822z()
+            )
+        );
+    }
+
+    #[test]
+    fn test_replace_header() {
+        let email_builder = EmailBuilder::new();
+        let date_now = now();
+
+        let email: SendableEmail = email_builder
+            .to("user@localhost")
+            .from("user@localhost")
+            .header(("Content-Type".to_string(), "hello".to_string()))
+            .replace_header(("Content-Type".to_string(), "world".to_string()))
+            .body("Hello World!")
+            .build()
+            .unwrap()
+            .into();
+        let id = email.message_id().to_string();
+        assert_eq!(
+            email.message_to_string().unwrap(),
+            format!(
+                "Content-Type: world\r\n\
+                 To: <user@localhost>\r\n\
+                 From: <user@localhost>\r\n\
+                 Date: {}\r\n\
+                 MIME-Version: 1.0\r\n\
+                 Message-ID: <{}.lettre@localhost>\r\n\r\n\
+                 Hello World!\r\n",
+                date_now.rfc822z(),
+                id,
             )
         );
     }
