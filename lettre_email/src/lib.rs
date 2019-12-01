@@ -123,7 +123,6 @@ impl PartBuilder {
     /// Adds replaces an existing header, or inserts it
     pub fn replace_header<A: Into<Header>>(mut self, header: A) -> PartBuilder {
         self.message.headers.replace(header.into());
-        println!("{:?}", self.message.headers);
 
         self
     }
