@@ -115,6 +115,11 @@ impl PartBuilder {
         self
     }
 
+    /// Get the current header values.
+    pub fn get_header(&self, header: String) -> Option<&Header> {
+        self.message.headers.get(header)
+    }
+
     /// Adds replaces an existing header, or inserts it
     pub fn replace_header<A: Into<Header>>(mut self, header: A) -> PartBuilder {
         self.message.headers.replace(header.into());
