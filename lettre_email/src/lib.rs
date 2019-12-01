@@ -115,6 +115,12 @@ impl PartBuilder {
         self
     }
 
+    /// Adds replaces an existing header, or inserts it
+    pub fn replace_header<A: Into<Header>>(mut self, header: A) -> PartBuilder {
+        self.message.headers.replace(header.into());
+        self
+    }
+
     /// Sets the body
     pub fn body<S: Into<String>>(mut self, body: S) -> PartBuilder {
         self.message.body = body.into();
