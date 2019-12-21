@@ -28,6 +28,10 @@ use std::str::FromStr;
 use time::{now, Tm};
 use uuid::Uuid;
 
+lazy_static::lazy_static! {
+    static ref LINE_BREAKS_RE: regex::Regex = regex::Regex::new(r"(\r\n|\r|\n)").unwrap();
+}
+
 /// Builds a `MimeMessage` structure
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct PartBuilder {
@@ -127,8 +131,11 @@ impl PartBuilder {
     }
 
     /// Sets the body
-    pub fn body<S: Into<String>>(mut self, body: S) -> PartBuilder {
-        self.message.body = body.into();
+    pub fn body<S: AsRef<str>>(mut self, body: S) -> PartBuilder {
+        // normalize line breaks
+        self.message.body = LINE_BREAKS_RE
+            .replace_all(body.as_ref(), "\r\n")
+            .to_string();
         self
     }
 
@@ -176,7 +183,7 @@ impl EmailBuilder {
     }
 
     /// Sets the email body
-    pub fn body<S: Into<String>>(mut self, body: S) -> EmailBuilder {
+    pub fn body<S: AsRef<str>>(mut self, body: S) -> EmailBuilder {
         self.message = self.message.body(body);
         self
     }
@@ -319,7 +326,7 @@ impl EmailBuilder {
     }
 
     /// Sets the email body to plain text content
-    pub fn text<S: Into<String>>(self, body: S) -> EmailBuilder {
+    pub fn text<S: AsRef<str>>(self, body: S) -> EmailBuilder {
         let text = PartBuilder::new()
             .body(body)
             .header(("Content-Type", mime::TEXT_PLAIN_UTF_8.to_string()))
@@ -328,7 +335,7 @@ impl EmailBuilder {
     }
 
     /// Sets the email body to HTML content
-    pub fn html<S: Into<String>>(self, body: S) -> EmailBuilder {
+    pub fn html<S: AsRef<str>>(self, body: S) -> EmailBuilder {
         let html = PartBuilder::new()
             .body(body)
             .header(("Content-Type", mime::TEXT_HTML_UTF_8.to_string()))
@@ -337,7 +344,7 @@ impl EmailBuilder {
     }
 
     /// Sets the email content
-    pub fn alternative<S: Into<String>, T: Into<String>>(
+    pub fn alternative<S: AsRef<str>, T: AsRef<str>>(
         self,
         body_html: S,
         body_text: T,
@@ -575,6 +582,48 @@ mod test {
                  Reply-To: <reply@localhost>\r\nIn-Reply-To: original\r\n\
                  MIME-Version: 1.0\r\nMessage-ID: \
                  <{}.lettre@localhost>\r\n\r\nHello World!\r\n",
+                date_now.rfc822z(),
+                id
+            )
+        );
+    }
+
+    #[test]
+    fn test_line_endings() {
+        let email_builder = EmailBuilder::new();
+        let date_now = now();
+
+        let email: SendableEmail = email_builder
+            .to("user@localhost")
+            .from("user@localhost")
+            .cc(("cc@localhost", "Alias"))
+            .bcc("bcc@localhost")
+            .reply_to("reply@localhost")
+            .in_reply_to("original".to_string())
+            .sender("sender@localhost")
+            .date(&date_now)
+            .subject("Hello")
+            .header(("X-test", "value"))
+            .body("hello\nworld\rwhat is happening\r\nabc\n")
+            .build()
+            .unwrap()
+            .into();
+        let id = email.message_id().to_string();
+        assert_eq!(
+            email.message_to_string().unwrap(),
+            format!(
+                "Date: {}\r\nSubject: Hello\r\nX-test: value\r\nSender: \
+                 <sender@localhost>\r\nTo: <user@localhost>\r\nFrom: \
+                 <user@localhost>\r\nCc: \"Alias\" <cc@localhost>\r\n\
+                 Reply-To: <reply@localhost>\r\nIn-Reply-To: original\r\n\
+                 MIME-Version: 1.0\r\nMessage-ID: \
+                 <{}.lettre@localhost>\r\n\
+                 \r\n\
+                 hello\r\n\
+                 world\r\n\
+                 what is happening\r\n\
+                 abc\r\n\
+                 \r\n",
                 date_now.rfc822z(),
                 id
             )
