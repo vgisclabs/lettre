@@ -44,18 +44,23 @@ use std::str::FromStr;
 
 /// Email address
 #[derive(PartialEq, Eq, Clone, Debug)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct EmailAddress(String);
 
 impl EmailAddress {
     pub fn new(address: String) -> EmailResult<EmailAddress> {
-        if !is_valid_email(&address) && !address.ends_with("localhost") {
-            Err(Error::InvalidEmailAddress)?;
+        if !EmailAddress::is_valid(&address) {
+            return Err(Error::InvalidEmailAddress);
         }
         Ok(EmailAddress(address))
+    }
+
+    pub fn is_valid(addr: &str) -> bool {
+        is_valid_email(addr) || addr.ends_with("localhost")
+    }
+
+    pub fn into_inner(self) -> String {
+        self.0
     }
 }
 
@@ -81,7 +86,7 @@ impl AsRef<str> for EmailAddress {
 
 impl AsRef<OsStr> for EmailAddress {
     fn as_ref(&self) -> &OsStr {
-        &self.0.as_ref()
+        self.0.as_ref()
     }
 }
 
@@ -89,10 +94,7 @@ impl AsRef<OsStr> for EmailAddress {
 ///
 /// We only accept mailboxes, and do not support source routes (as per RFC).
 #[derive(PartialEq, Eq, Clone, Debug)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct Envelope {
     /// The envelope recipients' addresses
     ///
@@ -106,7 +108,7 @@ impl Envelope {
     /// Creates a new envelope, which may fail if `to` is empty.
     pub fn new(from: Option<EmailAddress>, to: Vec<EmailAddress>) -> EmailResult<Envelope> {
         if to.is_empty() {
-            Err(Error::MissingTo)?;
+            return Err(Error::MissingTo);
         }
         Ok(Envelope {
             forward_path: to,
@@ -192,5 +194,5 @@ pub trait Transport<'a> {
     type Result;
 
     /// Sends the email
-    fn send(&mut self, email: SendableEmail) -> Self::Result;
+    fn send<E: Into<SendableEmail>>(&mut self, email: E) -> Self::Result;
 }

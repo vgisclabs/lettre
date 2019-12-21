@@ -18,10 +18,7 @@ pub mod net;
 
 /// The codec used for transparency
 #[derive(Default, Clone, Copy, Debug)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct ClientCodec {
     escape_count: u8,
 }
@@ -31,9 +28,7 @@ impl ClientCodec {
     pub fn new() -> Self {
         ClientCodec::default()
     }
-}
 
-impl ClientCodec {
     /// Adds transparency
     /// TODO: replace CR and LF by CRLF
     fn encode(&mut self, frame: &[u8], buf: &mut Vec<u8>) -> Result<(), Error> {

@@ -65,10 +65,7 @@ pub enum ClientSecurity {
 
 /// Configures connection reuse behavior
 #[derive(Clone, Debug, Copy)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub enum ConnectionReuseParameters {
     /// Unlimited connection reuse
     ReuseUnlimited,
@@ -410,7 +407,9 @@ impl<'a> Transport<'a> for SmtpTransport {
         feature = "cargo-clippy",
         allow(clippy::match_same_arms, clippy::cyclomatic_complexity)
     )]
-    fn send(&mut self, email: SendableEmail) -> SmtpResult {
+    fn send<E: Into<SendableEmail>>(&mut self, email: E) -> SmtpResult {
+        let email = email.into();
+
         let message_id = email.message_id().to_string();
 
         if !self.client.is_connected() {
@@ -474,7 +473,7 @@ impl<'a> Transport<'a> for SmtpTransport {
         // Message content
         let result = self.client.message(Box::new(email.message()));
 
-        if result.is_ok() {
+        if let Ok(ref result) = result {
             // Increment the connection reuse counter
             self.state.connection_reuse_count += 1;
 
@@ -484,9 +483,6 @@ impl<'a> Transport<'a> for SmtpTransport {
                 message_id,
                 self.state.connection_reuse_count,
                 result
-                    .as_ref()
-                    .ok()
-                    .unwrap()
                     .message
                     .iter()
                     .next()

@@ -2,13 +2,13 @@
 
 **Lettre is a mailer library for Rust.**
 
-[![Build Status](https://travis-ci.org/lettre/lettre.svg?branch=master)](https://travis-ci.org/lettre/lettre)
+![](https://github.com/lettre/lettre/workflows/Continuous%20integration/badge.svg)
 [![Build status](https://ci.appveyor.com/api/projects/status/mpwglemugjtkps2d/branch/master?svg=true)](https://ci.appveyor.com/project/amousset/lettre/branch/master)
-[![codecov](https://codecov.io/gh/lettre/lettre/branch/master/graph/badge.svg)](https://codecov.io/gh/lettre/lettre)
+[![Coverage Status](https://coveralls.io/repos/github/lettre/lettre/badge.svg?branch=master)](https://coveralls.io/github/lettre/lettre?branch=master)
 
 [![Crate](https://img.shields.io/crates/v/lettre.svg)](https://crates.io/crates/lettre)
 [![Docs](https://docs.rs/lettre/badge.svg)](https://docs.rs/lettre/)
-[![Required Rust version](https://img.shields.io/badge/rustc-1.32-green.svg)]()
+[![Required Rust version](https://img.shields.io/badge/rustc-1.36-green.svg)]()
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 [![Gitter](https://badges.gitter.im/lettre/lettre.svg)](https://gitter.im/lettre/lettre?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
@@ -34,7 +34,7 @@ Lettre provides the following features:
 
 ## Example
 
-This library requires Rust 1.32 or newer.
+This library requires Rust 1.34 or newer.
 To use this library, add the following to your `Cargo.toml`:
 
 ```toml
@@ -67,7 +67,7 @@ fn main() {
     // Open a local connection on port 25
     let mut mailer = SmtpClient::new_unencrypted_localhost().unwrap().transport();
     // Send the email
-    let result = mailer.send(email.into());
+    let result = mailer.send(email);
 
     if result.is_ok() {
         println!("Email sent");

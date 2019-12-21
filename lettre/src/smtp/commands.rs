@@ -13,16 +13,14 @@ use std::fmt::{self, Display, Formatter};
 
 /// EHLO command
 #[derive(PartialEq, Clone, Debug)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct EhloCommand {
     client_id: ClientId,
 }
 
 impl Display for EhloCommand {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        #[allow(clippy::write_with_newline)]
         write!(f, "EHLO {}\r\n", self.client_id)
     }
 }
@@ -36,10 +34,7 @@ impl EhloCommand {
 
 /// STARTTLS command
 #[derive(PartialEq, Clone, Debug, Copy)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct StarttlsCommand;
 
 impl Display for StarttlsCommand {
@@ -50,10 +45,7 @@ impl Display for StarttlsCommand {
 
 /// MAIL command
 #[derive(PartialEq, Clone, Debug)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct MailCommand {
     sender: Option<EmailAddress>,
     parameters: Vec<MailParameter>,
@@ -82,10 +74,7 @@ impl MailCommand {
 
 /// RCPT command
 #[derive(PartialEq, Clone, Debug)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct RcptCommand {
     recipient: EmailAddress,
     parameters: Vec<RcptParameter>,
@@ -113,10 +102,7 @@ impl RcptCommand {
 
 /// DATA command
 #[derive(PartialEq, Clone, Debug, Copy)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct DataCommand;
 
 impl Display for DataCommand {
@@ -127,10 +113,7 @@ impl Display for DataCommand {
 
 /// QUIT command
 #[derive(PartialEq, Clone, Debug, Copy)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct QuitCommand;
 
 impl Display for QuitCommand {
@@ -141,10 +124,7 @@ impl Display for QuitCommand {
 
 /// NOOP command
 #[derive(PartialEq, Clone, Debug, Copy)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct NoopCommand;
 
 impl Display for NoopCommand {
@@ -155,10 +135,7 @@ impl Display for NoopCommand {
 
 /// HELP command
 #[derive(PartialEq, Clone, Debug)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct HelpCommand {
     argument: Option<String>,
 }
@@ -182,17 +159,14 @@ impl HelpCommand {
 
 /// VRFY command
 #[derive(PartialEq, Clone, Debug)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct VrfyCommand {
     argument: String,
 }
 
 impl Display for VrfyCommand {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        #[cfg_attr(feature = "cargo-clippy", allow(clippy::write_with_newline))]
+        #[allow(clippy::write_with_newline)]
         write!(f, "VRFY {}\r\n", self.argument)
     }
 }
@@ -206,16 +180,14 @@ impl VrfyCommand {
 
 /// EXPN command
 #[derive(PartialEq, Clone, Debug)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExpnCommand {
     argument: String,
 }
 
 impl Display for ExpnCommand {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        #[allow(clippy::write_with_newline)]
         write!(f, "EXPN {}\r\n", self.argument)
     }
 }
@@ -229,10 +201,7 @@ impl ExpnCommand {
 
 /// RSET command
 #[derive(PartialEq, Clone, Debug, Copy)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct RsetCommand;
 
 impl Display for RsetCommand {
@@ -243,10 +212,7 @@ impl Display for RsetCommand {
 
 /// AUTH command
 #[derive(PartialEq, Clone, Debug)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct AuthCommand {
     mechanism: Mechanism,
     credentials: Credentials,

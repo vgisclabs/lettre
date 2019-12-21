@@ -14,10 +14,7 @@ pub mod error;
 
 /// Sends an email using the `sendmail` command
 #[derive(Debug, Default)]
-#[cfg_attr(
-    feature = "serde-impls",
-    derive(serde_derive::Serialize, serde_derive::Deserialize)
-)]
+#[cfg_attr(feature = "serde-impls", derive(serde::Serialize, serde::Deserialize))]
 pub struct SendmailTransport {
     command: String,
 }
@@ -41,7 +38,9 @@ impl SendmailTransport {
 impl<'a> Transport<'a> for SendmailTransport {
     type Result = SendmailResult;
 
-    fn send(&mut self, email: SendableEmail) -> SendmailResult {
+    fn send<E: Into<SendableEmail>>(&mut self, email: E) -> SendmailResult {
+        let email = email.into();
+
         let message_id = email.message_id().to_string();
 
         // Spawn the sendmail command
