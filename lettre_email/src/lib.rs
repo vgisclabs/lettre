@@ -578,7 +578,7 @@ mod test {
             format!(
                 "Date: {}\r\nSubject: Hello\r\nX-test: value\r\nSender: \
                  <sender@localhost>\r\nTo: <user@localhost>\r\nFrom: \
-                 <user@localhost>\r\nCc: \"Alias\" <cc@localhost>\r\n\
+                 <user@localhost>\r\nCc: Alias <cc@localhost>\r\n\
                  Reply-To: <reply@localhost>\r\nIn-Reply-To: original\r\n\
                  MIME-Version: 1.0\r\nMessage-ID: \
                  <{}.lettre@localhost>\r\n\r\nHello World!\r\n",
@@ -614,7 +614,7 @@ mod test {
             format!(
                 "Date: {}\r\nSubject: Hello\r\nX-test: value\r\nSender: \
                  <sender@localhost>\r\nTo: <user@localhost>\r\nFrom: \
-                 <user@localhost>\r\nCc: \"Alias\" <cc@localhost>\r\n\
+                 <user@localhost>\r\nCc: Alias <cc@localhost>\r\n\
                  Reply-To: <reply@localhost>\r\nIn-Reply-To: original\r\n\
                  MIME-Version: 1.0\r\nMessage-ID: \
                  <{}.lettre@localhost>\r\n\
@@ -656,7 +656,7 @@ mod test {
             format!(
                 "Date: {}\r\nSubject: Hello\r\nX-test: value\r\nMessage-ID: \
                  my-shiny-id\r\nSender: <sender@localhost>\r\nTo: <user@localhost>\r\nFrom: \
-                 <user@localhost>\r\nCc: \"Alias\" <cc@localhost>\r\nReply-To: \
+                 <user@localhost>\r\nCc: Alias <cc@localhost>\r\nReply-To: \
                  <reply@localhost>\r\nIn-Reply-To: original\r\nMIME-Version: 1.0\r\n\r\nHello \
                  World!\r\n",
                 date_now.rfc822z()
